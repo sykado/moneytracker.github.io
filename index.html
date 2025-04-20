@@ -1,243 +1,261 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daily Savings Tracker</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-100 text-gray-800">
-    <div class="max-w-3xl mx-auto p-4">
-      <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
-        <div class="mb-6 md:mb-0 w-full md:w-1/2">
-          <h2 class="text-2xl font-semibold mb-4 text-gray-900">🎯 Your Saving Progress</h2>
-          <label for="goalInput" class="block mb-1 text-sm font-medium text-gray-700">Set Your Goal (€):</label>
-          <input type="number" id="goalInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-400" placeholder="Enter goal amount" />
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Savings Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-3xl mx-auto p-4">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
+      <div class="mb-6 md:mb-0 w-full md:w-1/2">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-900">🎯 Your Saving Progress</h2>
 
-        <div class="w-full md:w-1/2 md:pl-6">
-          <div class="bg-white rounded-xl shadow p-4 mb-4">
-            <h3 class="text-sm text-gray-500 mb-1">📈 Average Daily Saving</h3>
-            <p id="avgAmount" class="text-lg font-semibold text-gray-800">€0.00</p>
-          </div>
-          <div class="bg-white rounded-xl shadow p-4">
-            <h3 class="text-sm text-gray-500 mb-1">🚀 Total Saved</h3>
-            <p id="totalAmount" class="text-lg font-semibold text-gray-800">€0.00 <span id="goalProgress" class="text-sm text-blue-600 ml-2">(0%)</span></p>
-          </div>
-        </div>
+        <label for="prevSavingInput" class="block mb-1 text-sm font-medium text-gray-700">Previous Saving (€):</label>
+        <input type="number" id="prevSavingInput" class="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-400" placeholder="Enter previous savings" />
+
+        <label for="goalInput" class="block mb-1 text-sm font-medium text-gray-700">Set Your Goal (€):</label>
+        <input type="number" id="goalInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-400" placeholder="Enter goal amount" />
       </div>
 
-      <form id="savings-form" class="mb-6">
-        <div class="flex flex-col md:flex-row gap-4">
-          <input type="date" id="date" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" required />
-          <input type="number" id="amount" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" placeholder="Amount saved (€)" required />
-          <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition">Add Saving</button>
+      <div class="w-full md:w-1/2 md:pl-6">
+        <div class="bg-white rounded-xl shadow p-4 mb-4">
+          <h3 class="text-sm text-gray-500 mb-1">📈 Average Daily Saving</h3>
+          <p id="avgAmount" class="text-lg font-semibold text-gray-800">€0.00</p>
         </div>
-      </form>
-
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white shadow rounded-lg overflow-hidden">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="savings-table-body" class="divide-y divide-gray-200"></tbody>
-        </table>
-      </div>
-
-      <div id="pagination" class="flex justify-center mt-4 space-x-2"></div>
-
-      <div class="mt-8">
-        <canvas id="savingsChart" class="w-full" height="150"></canvas>
-      </div>
-
-      <div class="mt-6 flex flex-col md:flex-row items-center gap-4">
-        <input type="file" id="importFile" class="border border-gray-300 px-4 py-2 rounded-lg shadow-sm" />
-        <button onclick="downloadJSON()" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow hover:bg-green-600 transition">Download Data</button>
+        <div class="bg-white rounded-xl shadow p-4 mb-4">
+          <h3 class="text-sm text-gray-500 mb-1">🚀 Total Saved</h3>
+          <p id="totalAmount" class="text-lg font-semibold text-gray-800">€0.00</p>
+        </div>
+        <div class="bg-white rounded-xl shadow p-4">
+          <h3 class="text-sm text-gray-500 mb-1">💰 Total with Previous</h3>
+          <p id="totalWithPrevious" class="text-lg font-semibold text-green-700">€0.00</p>
+        </div>
       </div>
     </div>
 
-    <script>
-      const form = document.getElementById("savings-form");
-      const dateInput = document.getElementById("date");
-      const amountInput = document.getElementById("amount");
-      const goalInput = document.getElementById("goalInput");
-      const tableBody = document.getElementById("savings-table-body");
-      const avgAmount = document.getElementById("avgAmount");
-      const totalAmount = document.getElementById("totalAmount");
-      const chartCanvas = document.getElementById("savingsChart").getContext("2d");
-      const importFile = document.getElementById("importFile");
+    <form id="savings-form" class="mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <input type="date" id="date" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" required />
+        <input type="number" id="amount" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" placeholder="Amount saved (€)" required />
+        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition">Add Saving</button>
+      </div>
+    </form>
 
-      let savings = JSON.parse(localStorage.getItem("savingsData")) || {};
-      let goal = parseFloat(localStorage.getItem("goalAmount")) || 0;
-      let chart;
-      let currentPage = 1;
-      const rowsPerPage = 5;
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white shadow rounded-lg overflow-hidden">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="savings-table-body" class="divide-y divide-gray-200"></tbody>
+      </table>
+    </div>
 
-      goalInput.value = goal;
-      goalInput.addEventListener("input", () => {
-        goal = parseFloat(goalInput.value) || 0;
-        localStorage.setItem("goalAmount", goal);
-        render();
+    <div id="pagination" class="flex justify-center mt-4 space-x-2"></div>
+
+    <div class="mt-8">
+      <canvas id="savingsChart" class="w-full" height="150"></canvas>
+    </div>
+
+    <div class="mt-6 flex flex-col md:flex-row items-center gap-4">
+      <input type="file" id="importFile" class="border border-gray-300 px-4 py-2 rounded-lg shadow-sm" />
+      <button onclick="downloadJSON()" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow hover:bg-green-600 transition">Download Data</button>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("savings-form");
+    const dateInput = document.getElementById("date");
+    const amountInput = document.getElementById("amount");
+    const goalInput = document.getElementById("goalInput");
+    const prevSavingInput = document.getElementById("prevSavingInput");
+    const tableBody = document.getElementById("savings-table-body");
+    const avgAmount = document.getElementById("avgAmount");
+    const totalAmount = document.getElementById("totalAmount");
+    const totalWithPrevious = document.getElementById("totalWithPrevious");
+    const chartCanvas = document.getElementById("savingsChart").getContext("2d");
+    const importFile = document.getElementById("importFile");
+
+    let savings = JSON.parse(localStorage.getItem("savingsData")) || {};
+    let goal = parseFloat(localStorage.getItem("goalAmount")) || 0;
+    let previousSaving = parseFloat(localStorage.getItem("previousSaving")) || 0;
+    let chart;
+    let currentPage = 1;
+    const rowsPerPage = 5;
+
+    goalInput.value = goal;
+    prevSavingInput.value = previousSaving;
+
+    goalInput.addEventListener("input", () => {
+      goal = parseFloat(goalInput.value) || 0;
+      localStorage.setItem("goalAmount", goal);
+      render();
+    });
+
+    prevSavingInput.addEventListener("input", () => {
+      previousSaving = parseFloat(prevSavingInput.value) || 0;
+      localStorage.setItem("previousSaving", previousSaving);
+      render();
+    });
+
+    function saveData() {
+      localStorage.setItem("savingsData", JSON.stringify(savings));
+    }
+
+    function paginate(arr, page, perPage) {
+      return arr.slice((page - 1) * perPage, page * perPage);
+    }
+
+    function renderTable() {
+      const dates = Object.keys(savings).sort();
+      const pageData = paginate(dates, currentPage, rowsPerPage);
+      tableBody.innerHTML = "";
+
+      pageData.forEach((date) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="px-6 py-4">${date}</td>
+          <td class="px-6 py-4">€${parseFloat(savings[date]).toFixed(2)}</td>
+          <td class="px-6 py-4">
+            <button onclick="editEntry('${date}')" class="text-yellow-600 hover:underline mr-2">Edit</button>
+            <button onclick="deleteEntry('${date}')" class="text-red-600 hover:underline">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
       });
 
-      function saveData() {
-        localStorage.setItem("savingsData", JSON.stringify(savings));
-      }
+      renderPagination(dates.length);
+    }
 
-      function paginate(arr, page, perPage) {
-        return arr.slice((page - 1) * perPage, page * perPage);
-      }
+    function renderStats() {
+      const values = Object.values(savings).map(Number);
+      const total = values.reduce((a, b) => a + b, 0);
+      const avg = values.length ? total / values.length : 0;
+      const combined = total + previousSaving;
 
-      function renderTable() {
-        const dates = Object.keys(savings).sort();
-        const pageData = paginate(dates, currentPage, rowsPerPage);
-        tableBody.innerHTML = "";
+      avgAmount.textContent = `€${avg.toFixed(2)}`;
+      totalAmount.textContent = `€${total.toFixed(2)}`;
+      totalWithPrevious.textContent = `€${combined.toFixed(2)}`;
+    }
 
-        pageData.forEach((date) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td class="px-6 py-4">${date}</td>
-            <td class="px-6 py-4">€${parseFloat(savings[date]).toFixed(2)}</td>
-            <td class="px-6 py-4">
-              <button onclick="editEntry('${date}')" class="text-yellow-600 hover:underline mr-2">Edit</button>
-              <button onclick="deleteEntry('${date}')" class="text-red-600 hover:underline">Delete</button>
-            </td>
-          `;
-          tableBody.appendChild(tr);
-        });
+    function renderChart() {
+      const dates = Object.keys(savings).sort();
+      const values = dates.map((d) => parseFloat(savings[d]));
 
-        renderPagination(dates.length);
-      }
+      if (chart) chart.destroy();
 
-      function renderStats() {
-        const values = Object.values(savings).map(Number);
-        const total = values.reduce((a, b) => a + b, 0);
-        const avg = values.length ? total / values.length : 0;
-
-        avgAmount.textContent = `€${avg.toFixed(2)}`;
-        totalAmount.innerHTML = `€${total.toFixed(2)} <span id="goalProgress" class="text-sm text-blue-600 ml-2">(${goal > 0 ? ((total / goal) * 100).toFixed(1) : 0}%)</span>`;
-      }
-
-      function renderChart() {
-        const dates = Object.keys(savings).sort();
-        const values = dates.map((d) => parseFloat(savings[d]));
-
-        if (chart) chart.destroy();
-
-        chart = new Chart(chartCanvas, {
-          type: "line",
-          data: {
-            labels: dates,
-            datasets: [
-              {
-                label: "Daily Savings (€)",
-                data: values,
-                fill: true,
-                borderColor: "#3b82f6",
-                backgroundColor: "rgba(59, 130, 246, 0.2)",
-                tension: 0.4,
-              },
-            ],
+      chart = new Chart(chartCanvas, {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: [{
+            label: "Daily Savings (€)",
+            data: values,
+            fill: true,
+            borderColor: "#3b82f6",
+            backgroundColor: "rgba(59, 130, 246, 0.2)",
+            tension: 0.4,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { title: { display: true, text: "Date" } },
+            y: { beginAtZero: true, title: { display: true, text: "Amount (€)" } },
           },
-          options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { title: { display: true, text: "Date" } },
-              y: { beginAtZero: true, title: { display: true, text: "Amount (€)" } },
-            },
-          },
-        });
-      }
+        },
+      });
+    }
 
-      function renderPagination(totalItems) {
-        const pagination = document.getElementById("pagination");
-        pagination.innerHTML = "";
-        const pages = Math.ceil(totalItems / rowsPerPage);
+    function renderPagination(totalItems) {
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+      const pages = Math.ceil(totalItems / rowsPerPage);
+      if (pages <= 1) return;
 
-        if (pages <= 1) return;
-
-        for (let i = 1; i <= pages; i++) {
-          const btn = document.createElement("button");
-          btn.textContent = i;
-          btn.className = `px-3 py-1 rounded-lg ${i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200"}`;
-          btn.onclick = () => {
-            currentPage = i;
-            render();
-          };
-          pagination.appendChild(btn);
-        }
-      }
-
-      function editEntry(date) {
-        const newAmount = prompt("Edit amount:", savings[date]);
-        if (newAmount && !isNaN(newAmount)) {
-          savings[date] = parseFloat(newAmount).toFixed(2);
-          saveData();
+      for (let i = 1; i <= pages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = `px-3 py-1 rounded-lg ${i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200"}`;
+        btn.onclick = () => {
+          currentPage = i;
           render();
-        }
-      }
-
-      function deleteEntry(date) {
-        if (confirm("Delete this entry?")) {
-          delete savings[date];
-          saveData();
-          render();
-        }
-      }
-
-      function downloadJSON() {
-        const blob = new Blob([JSON.stringify(savings)], { type: "application/json" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "savings.json";
-        a.click();
-      }
-
-      importFile.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const data = JSON.parse(event.target.result);
-            if (typeof data === "object") {
-              savings = data;
-              saveData();
-              render();
-            }
-          } catch (err) {
-            alert("Invalid JSON file.");
-          }
         };
-        reader.readAsText(file);
-      });
-
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const date = dateInput.value;
-        const amount = parseFloat(amountInput.value);
-        if (!date || isNaN(amount)) return;
-        savings[date] = amount.toFixed(2);
-        saveData();
-        form.reset();
-        dateInput.valueAsDate = new Date();
-        render();
-      });
-
-      function render() {
-        renderTable();
-        renderChart();
-        renderStats();
+        pagination.appendChild(btn);
       }
+    }
 
+    function editEntry(date) {
+      const newAmount = prompt("Edit amount:", savings[date]);
+      if (newAmount && !isNaN(newAmount)) {
+        savings[date] = parseFloat(newAmount).toFixed(2);
+        saveData();
+        render();
+      }
+    }
+
+    function deleteEntry(date) {
+      if (confirm("Delete this entry?")) {
+        delete savings[date];
+        saveData();
+        render();
+      }
+    }
+
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify(savings)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "savings.json";
+      a.click();
+    }
+
+    importFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (typeof data === "object") {
+            savings = data;
+            saveData();
+            render();
+          }
+        } catch (err) {
+          alert("Invalid JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const date = dateInput.value;
+      const amount = parseFloat(amountInput.value);
+      if (!date || isNaN(amount)) return;
+      savings[date] = amount.toFixed(2);
+      saveData();
+      form.reset();
       dateInput.valueAsDate = new Date();
       render();
-    </script>
-  </body>
+    });
+
+    function render() {
+      renderTable();
+      renderChart();
+      renderStats();
+    }
+
+    dateInput.valueAsDate = new Date();
+    render();
+  </script>
+</body>
 </html>
