@@ -4,70 +4,135 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Daily Savings Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .card-hover {
+      transition: transform 0.2s ease-in-out;
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+    }
+    .custom-shadow {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    input:focus, button:focus {
+      outline: none;
+      ring: 2px;
+    }
+    .pagination-btn {
+      transition: all 0.2s ease;
+    }
+    .pagination-btn:hover:not(.active) {
+      background-color: #e5e7eb;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div class="max-w-3xl mx-auto p-4">
-    <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
-      <div class="mb-6 md:mb-0 w-full md:w-1/2">
-        <h2 class="text-2xl font-semibold mb-4 text-gray-900">🎯 Your Saving Progress</h2>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-4xl mx-auto p-6">
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Daily Savings Tracker</h1>
+      <p class="text-gray-600">Track your savings journey and reach your financial goals</p>
+    </header>
 
-        <label for="prevSavingInput" class="block mb-1 text-sm font-medium text-gray-700">Previous Saving (€):</label>
-        <input type="number" id="prevSavingInput" class="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-400" placeholder="Enter previous savings" />
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-8 gap-6">
+      <div class="mb-6 md:mb-0 w-full md:w-1/2 bg-white p-6 rounded-xl custom-shadow">
+        <h2 class="text-2xl font-semibold mb-5 text-gray-900">🎯 Your Saving Goals</h2>
 
-        <label for="goalInput" class="block mb-1 text-sm font-medium text-gray-700">Set Your Goal (€):</label>
-        <input type="number" id="goalInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-400" placeholder="Enter goal amount" />
+        <label for="prevSavingInput" class="block mb-2 text-sm font-medium text-gray-700">Previous Savings (€):</label>
+        <input type="number" id="prevSavingInput" min="0" step="0.01" class="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-300" placeholder="Enter previous savings" />
+
+        <label for="goalInput" class="block mb-2 text-sm font-medium text-gray-700">Set Your Goal (€):</label>
+        <input type="number" id="goalInput" min="0" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-300" placeholder="Enter goal amount" />
+        
+        <div class="mt-5 pt-4 border-t border-gray-100">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700">Progress to Goal:</span>
+            <span id="progressPercentage" class="text-sm font-semibold text-blue-600">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+            <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="w-full md:w-1/2 md:pl-6">
-        <div class="bg-white rounded-xl shadow p-4 mb-4">
-          <h3 class="text-sm text-gray-500 mb-1">📈 Average Daily Saving</h3>
-          <p id="avgAmount" class="text-lg font-semibold text-gray-800">€0.00</p>
+      <div class="w-full md:w-1/2 grid grid-cols-1 gap-4">
+        <div class="bg-white rounded-xl custom-shadow p-5 card-hover">
+          <h3 class="text-sm font-medium text-gray-500 mb-1">📈 Average Daily Saving</h3>
+          <p id="avgAmount" class="text-xl font-bold text-gray-800">€0.00</p>
         </div>
-        <div class="bg-white rounded-xl shadow p-4 mb-4">
-          <h3 class="text-sm text-gray-500 mb-1">🚀 Total Saved</h3>
-          <p id="totalAmount" class="text-lg font-semibold text-gray-800">€0.00</p>
+        <div class="bg-white rounded-xl custom-shadow p-5 card-hover">
+          <h3 class="text-sm font-medium text-gray-500 mb-1">🚀 Total Saved</h3>
+          <p id="totalAmount" class="text-xl font-bold text-gray-800">€0.00</p>
         </div>
-        <div class="bg-white rounded-xl shadow p-4">
-          <h3 class="text-sm text-gray-500 mb-1">💰 Total with Previous</h3>
-          <p id="totalWithPrevious" class="text-lg font-semibold text-green-700">€0.00</p>
+        <div class="bg-white rounded-xl custom-shadow p-5 card-hover">
+          <h3 class="text-sm font-medium text-gray-500 mb-1">💰 Total with Previous</h3>
+          <p id="totalWithPrevious" class="text-xl font-bold text-green-600">€0.00</p>
         </div>
       </div>
     </div>
 
-    <form id="savings-form" class="mb-6">
+    <form id="savings-form" class="mb-8 bg-white p-6 rounded-xl custom-shadow">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Add New Saving</h3>
       <div class="flex flex-col md:flex-row gap-4">
-        <input type="date" id="date" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" required />
-        <input type="number" id="amount" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm" placeholder="Amount saved (€)" required />
-        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition">Add Saving</button>
+        <div class="flex-1">
+          <label for="date" class="block mb-2 text-sm font-medium text-gray-700">Date</label>
+          <input type="date" id="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-300" required />
+        </div>
+        <div class="flex-1">
+          <label for="amount" class="block mb-2 text-sm font-medium text-gray-700">Amount (€)</label>
+          <input type="number" id="amount" min="0" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring focus:ring-blue-300" placeholder="Amount saved" required />
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition w-full md:w-auto">Add Saving</button>
+        </div>
       </div>
     </form>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full bg-white shadow rounded-lg overflow-hidden">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="savings-table-body" class="divide-y divide-gray-200"></tbody>
-      </table>
+    <div class="bg-white rounded-xl custom-shadow overflow-hidden mb-8">
+      <h3 class="text-lg font-semibold p-5 border-b border-gray-100">Savings History</h3>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="savings-table-body" class="divide-y divide-gray-200 bg-white"></tbody>
+        </table>
+      </div>
+      <div id="pagination" class="flex justify-center p-4 space-x-2"></div>
+      <div id="noData" class="text-center p-6 text-gray-500 hidden">No savings data yet. Start adding your daily savings above!</div>
     </div>
 
-    <div id="pagination" class="flex justify-center mt-4 space-x-2"></div>
-
-    <div class="mt-8">
-      <canvas id="savingsChart" class="w-full" height="150"></canvas>
+    <div class="bg-white rounded-xl custom-shadow p-6 mb-8">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Savings Trend</h3>
+      <canvas id="savingsChart" class="w-full" height="250"></canvas>
     </div>
 
-    <div class="mt-6 flex flex-col md:flex-row items-center gap-4">
-      <input type="file" id="importFile" class="border border-gray-300 px-4 py-2 rounded-lg shadow-sm" />
-      <button onclick="downloadJSON()" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow hover:bg-green-600 transition">Download Data</button>
+    <div class="bg-white rounded-xl custom-shadow p-6">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Import/Export Data</h3>
+      <div class="flex flex-col md:flex-row items-center gap-4">
+        <div class="w-full md:w-1/2">
+          <label for="importFile" class="block mb-2 text-sm font-medium text-gray-700">Import Data</label>
+          <input type="file" id="importFile" accept=".json" class="w-full border border-gray-300 px-4 py-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300" />
+        </div>
+        <div class="w-full md:w-1/2 flex items-end">
+          <button onclick="downloadJSON()" class="bg-green-500 text-white px-6 py-2 rounded-lg shadow hover:bg-green-600 transition w-full">Download Data</button>
+        </div>
+      </div>
     </div>
   </div>
+
+  <footer class="text-center text-gray-500 text-sm py-6">
+    © 2025 Daily Savings Tracker | Made with ❤️
+  </footer>
 
   <script>
     const form = document.getElementById("savings-form");
@@ -79,8 +144,11 @@
     const avgAmount = document.getElementById("avgAmount");
     const totalAmount = document.getElementById("totalAmount");
     const totalWithPrevious = document.getElementById("totalWithPrevious");
-    const chartCanvas = document.getElementById("savingsChart").getContext("2d");
+    const chartCanvas = document.getElementById("savingsChart");
     const importFile = document.getElementById("importFile");
+    const progressBar = document.getElementById("progressBar");
+    const progressPercentage = document.getElementById("progressPercentage");
+    const noDataMessage = document.getElementById("noData");
 
     let savings = JSON.parse(localStorage.getItem("savingsData")) || {};
     let goal = parseFloat(localStorage.getItem("goalAmount")) || 0;
@@ -89,16 +157,17 @@
     let currentPage = 1;
     const rowsPerPage = 5;
 
-    goalInput.value = goal;
-    prevSavingInput.value = previousSaving;
+    // Initialize values from localStorage
+    goalInput.value = goal || '';
+    prevSavingInput.value = previousSaving || '';
 
-    goalInput.addEventListener("input", () => {
+    goalInput.addEventListener("change", () => {
       goal = parseFloat(goalInput.value) || 0;
       localStorage.setItem("goalAmount", goal);
       render();
     });
 
-    prevSavingInput.addEventListener("input", () => {
+    prevSavingInput.addEventListener("change", () => {
       previousSaving = parseFloat(prevSavingInput.value) || 0;
       localStorage.setItem("previousSaving", previousSaving);
       render();
@@ -112,19 +181,34 @@
       return arr.slice((page - 1) * perPage, page * perPage);
     }
 
+    function formatDate(dateString) {
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+
     function renderTable() {
-      const dates = Object.keys(savings).sort();
+      const dates = Object.keys(savings).sort((a, b) => new Date(b) - new Date(a)); // Sort by most recent
+      
+      if (dates.length === 0) {
+        tableBody.innerHTML = '';
+        noDataMessage.classList.remove('hidden');
+        document.getElementById('pagination').innerHTML = '';
+        return;
+      }
+      
+      noDataMessage.classList.add('hidden');
       const pageData = paginate(dates, currentPage, rowsPerPage);
       tableBody.innerHTML = "";
 
       pageData.forEach((date) => {
         const tr = document.createElement("tr");
+        tr.className = "hover:bg-gray-50 transition-colors";
         tr.innerHTML = `
-          <td class="px-6 py-4">${date}</td>
-          <td class="px-6 py-4">€${parseFloat(savings[date]).toFixed(2)}</td>
-          <td class="px-6 py-4">
-            <button onclick="editEntry('${date}')" class="text-yellow-600 hover:underline mr-2">Edit</button>
-            <button onclick="deleteEntry('${date}')" class="text-red-600 hover:underline">Delete</button>
+          <td class="px-6 py-4 whitespace-nowrap">${formatDate(date)}</td>
+          <td class="px-6 py-4 whitespace-nowrap">€${parseFloat(savings[date]).toFixed(2)}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <button onclick="editEntry('${date}')" class="text-blue-600 hover:text-blue-800 mr-3 font-medium">Edit</button>
+            <button onclick="deleteEntry('${date}')" class="text-red-600 hover:text-red-800 font-medium">Delete</button>
           </td>
         `;
         tableBody.appendChild(tr);
@@ -142,33 +226,130 @@
       avgAmount.textContent = `€${avg.toFixed(2)}`;
       totalAmount.textContent = `€${total.toFixed(2)}`;
       totalWithPrevious.textContent = `€${combined.toFixed(2)}`;
+
+      // Update progress bar
+      if (goal > 0) {
+        const progressValue = Math.min(100, Math.round((combined / goal) * 100));
+        progressBar.style.width = `${progressValue}%`;
+        progressPercentage.textContent = `${progressValue}%`;
+        
+        // Change color based on progress
+        if (progressValue >= 100) {
+          progressBar.classList.remove('bg-blue-600');
+          progressBar.classList.add('bg-green-600');
+        } else {
+          progressBar.classList.remove('bg-green-600');
+          progressBar.classList.add('bg-blue-600');
+        }
+      } else {
+        progressBar.style.width = '0%';
+        progressPercentage.textContent = '0%';
+      }
     }
 
     function renderChart() {
-      const dates = Object.keys(savings).sort();
+      const dates = Object.keys(savings).sort((a, b) => new Date(a) - new Date(b));
       const values = dates.map((d) => parseFloat(savings[d]));
+      
+      // Calculate cumulative amounts for the chart
+      let cumulative = 0;
+      const cumulativeData = values.map(val => cumulative += val);
+      
+      // Format dates for better display
+      const formattedDates = dates.map(date => formatDate(date));
 
       if (chart) chart.destroy();
 
+      if (dates.length === 0) return;
+      
       chart = new Chart(chartCanvas, {
         type: "line",
         data: {
-          labels: dates,
-          datasets: [{
-            label: "Daily Savings (€)",
-            data: values,
-            fill: true,
-            borderColor: "#3b82f6",
-            backgroundColor: "rgba(59, 130, 246, 0.2)",
-            tension: 0.4,
-          }],
+          labels: formattedDates,
+          datasets: [
+            {
+              label: "Daily Amount (€)",
+              data: values,
+              borderColor: "#3b82f6",
+              backgroundColor: "rgba(59, 130, 246, 0.5)",
+              pointBackgroundColor: "#3b82f6",
+              tension: 0.2,
+              yAxisID: 'y',
+              order: 2
+            },
+            {
+              label: "Cumulative Savings (€)",
+              data: cumulativeData,
+              borderColor: "#10b981",
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              pointBackgroundColor: "#10b981",
+              tension: 0.4,
+              fill: true,
+              yAxisID: 'y1',
+              order: 1
+            }
+          ],
         },
         options: {
           responsive: true,
-          plugins: { legend: { display: false } },
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: { 
+              display: true,
+              position: 'top',
+              labels: {
+                usePointStyle: true,
+                boxWidth: 6
+              }
+            },
+            tooltip: {
+              usePointStyle: true,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += '€' + context.parsed.y.toFixed(2);
+                  }
+                  return label;
+                }
+              }
+            }
+          },
           scales: {
-            x: { title: { display: true, text: "Date" } },
-            y: { beginAtZero: true, title: { display: true, text: "Amount (€)" } },
+            x: { 
+              grid: {
+                display: false
+              }
+            },
+            y: { 
+              type: 'linear',
+              display: true,
+              position: 'left',
+              beginAtZero: true,
+              title: { 
+                display: true, 
+                text: "Daily Amount (€)" 
+              }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              beginAtZero: true,
+              grid: {
+                drawOnChartArea: false,
+              },
+              title: { 
+                display: true, 
+                text: "Cumulative (€)" 
+              }
+            }
           },
         },
       });
@@ -180,21 +361,90 @@
       const pages = Math.ceil(totalItems / rowsPerPage);
       if (pages <= 1) return;
 
-      for (let i = 1; i <= pages; i++) {
+      // Add previous button
+      if (currentPage > 1) {
+        const prevBtn = document.createElement("button");
+        prevBtn.innerHTML = "&laquo;";
+        prevBtn.className = "pagination-btn px-3 py-1 rounded-lg bg-gray-200";
+        prevBtn.onclick = () => {
+          currentPage--;
+          render();
+        };
+        pagination.appendChild(prevBtn);
+      }
+
+      // Show limited page numbers with ellipsis
+      const maxPageButtons = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+      let endPage = Math.min(pages, startPage + maxPageButtons - 1);
+      
+      if (endPage - startPage + 1 < maxPageButtons) {
+        startPage = Math.max(1, endPage - maxPageButtons + 1);
+      }
+      
+      if (startPage > 1) {
+        const firstBtn = document.createElement("button");
+        firstBtn.textContent = "1";
+        firstBtn.className = "pagination-btn px-3 py-1 rounded-lg bg-gray-200";
+        firstBtn.onclick = () => {
+          currentPage = 1;
+          render();
+        };
+        pagination.appendChild(firstBtn);
+        
+        if (startPage > 2) {
+          const ellipsis = document.createElement("span");
+          ellipsis.textContent = "...";
+          ellipsis.className = "px-2 py-1";
+          pagination.appendChild(ellipsis);
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
         const btn = document.createElement("button");
         btn.textContent = i;
-        btn.className = `px-3 py-1 rounded-lg ${i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200"}`;
+        btn.className = `pagination-btn px-3 py-1 rounded-lg ${i === currentPage ? "bg-blue-500 text-white active" : "bg-gray-200"}`;
         btn.onclick = () => {
           currentPage = i;
           render();
         };
         pagination.appendChild(btn);
       }
+      
+      if (endPage < pages) {
+        if (endPage < pages - 1) {
+          const ellipsis = document.createElement("span");
+          ellipsis.textContent = "...";
+          ellipsis.className = "px-2 py-1";
+          pagination.appendChild(ellipsis);
+        }
+        
+        const lastBtn = document.createElement("button");
+        lastBtn.textContent = pages;
+        lastBtn.className = "pagination-btn px-3 py-1 rounded-lg bg-gray-200";
+        lastBtn.onclick = () => {
+          currentPage = pages;
+          render();
+        };
+        pagination.appendChild(lastBtn);
+      }
+
+      // Add next button
+      if (currentPage < pages) {
+        const nextBtn = document.createElement("button");
+        nextBtn.innerHTML = "&raquo;";
+        nextBtn.className = "pagination-btn px-3 py-1 rounded-lg bg-gray-200";
+        nextBtn.onclick = () => {
+          currentPage++;
+          render();
+        };
+        pagination.appendChild(nextBtn);
+      }
     }
 
     function editEntry(date) {
-      const newAmount = prompt("Edit amount:", savings[date]);
-      if (newAmount && !isNaN(newAmount)) {
+      const newAmount = prompt("Edit saving amount (€):", savings[date]);
+      if (newAmount !== null && !isNaN(newAmount) && newAmount.trim() !== "") {
         savings[date] = parseFloat(newAmount).toFixed(2);
         saveData();
         render();
@@ -202,18 +452,31 @@
     }
 
     function deleteEntry(date) {
-      if (confirm("Delete this entry?")) {
+      if (confirm("Are you sure you want to delete this saving entry?")) {
         delete savings[date];
         saveData();
+        
+        // Check if current page is now empty and adjust if needed
+        const dates = Object.keys(savings);
+        const totalPages = Math.ceil(dates.length / rowsPerPage);
+        if (currentPage > totalPages && totalPages > 0) {
+          currentPage = totalPages;
+        }
+        
         render();
       }
     }
 
     function downloadJSON() {
-      const blob = new Blob([JSON.stringify(savings)], { type: "application/json" });
+      const dataToSave = {
+        savings: savings,
+        goal: goal,
+        previousSaving: previousSaving
+      };
+      const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "savings.json";
+      a.download = `savings_data_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
     }
 
@@ -223,14 +486,35 @@
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const data = JSON.parse(event.target.result);
-          if (typeof data === "object") {
-            savings = data;
-            saveData();
-            render();
+          const importedData = JSON.parse(event.target.result);
+          
+          // Handle both formats: object with separate properties or direct savings object
+          if (importedData.savings && typeof importedData.savings === "object") {
+            savings = importedData.savings;
+            
+            if (!isNaN(importedData.goal)) {
+              goal = parseFloat(importedData.goal);
+              goalInput.value = goal || '';
+              localStorage.setItem("goalAmount", goal);
+            }
+            
+            if (!isNaN(importedData.previousSaving)) {
+              previousSaving = parseFloat(importedData.previousSaving);
+              prevSavingInput.value = previousSaving || '';
+              localStorage.setItem("previousSaving", previousSaving);
+            }
+          } else if (typeof importedData === "object") {
+            savings = importedData;
+          } else {
+            throw new Error("Invalid format");
           }
+          
+          saveData();
+          currentPage = 1; // Reset to first page after import
+          render();
+          alert("Data imported successfully!");
         } catch (err) {
-          alert("Invalid JSON file.");
+          alert("Invalid JSON file. Please upload a valid savings data file.");
         }
       };
       reader.readAsText(file);
@@ -240,11 +524,22 @@
       e.preventDefault();
       const date = dateInput.value;
       const amount = parseFloat(amountInput.value);
-      if (!date || isNaN(amount)) return;
+      
+      if (!date || isNaN(amount) || amount < 0) {
+        alert("Please enter a valid date and amount.");
+        return;
+      }
+      
+      // Check if date already exists
+      if (savings[date] && !confirm("An entry for this date already exists. Do you want to override it?")) {
+        return;
+      }
+      
       savings[date] = amount.toFixed(2);
       saveData();
       form.reset();
       dateInput.valueAsDate = new Date();
+      currentPage = 1; // Go to first page to see the new entry
       render();
     });
 
@@ -254,7 +549,10 @@
       renderStats();
     }
 
+    // Initialize date field with current date
     dateInput.valueAsDate = new Date();
+    
+    // Initial render
     render();
   </script>
 </body>
