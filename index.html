@@ -30,6 +30,38 @@
     .pagination-btn:hover:not(.active) {
       background-color: #e5e7eb;
     }
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+    }
+    .number-tile {
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      position: relative;
+      cursor: pointer;
+    }
+    .number-tile.used::after {
+      content: '';
+      position: absolute;
+      width: 80%;
+      height: 2px;
+      background-color: currentColor;
+      transform: rotate(-45deg);
+    }
+    .number-tile.used::before {
+      content: '';
+      position: absolute;
+      width: 80%;
+      height: 2px;
+      background-color: currentColor;
+      transform: rotate(45deg);
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -74,6 +106,16 @@
           <p id="totalWithPrevious" class="text-xl font-bold text-green-600">€0.00</p>
         </div>
       </div>
+    </div>
+
+    <!-- Number Tracking Grid -->
+    <div class="bg-white rounded-xl custom-shadow p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Number Tracker (1-50)</h3>
+        <button id="resetNumbersBtn" class="text-sm text-blue-600 hover:underline">Reset All</button>
+      </div>
+      <p class="text-sm text-gray-500 mb-4">Numbers that have been used in your savings are marked with a cross.</p>
+      <div id="numberGrid" class="number-grid"></div>
     </div>
 
     <form id="savings-form" class="mb-8 bg-white p-6 rounded-xl custom-shadow">
@@ -149,10 +191,13 @@
     const progressBar = document.getElementById("progressBar");
     const progressPercentage = document.getElementById("progressPercentage");
     const noDataMessage = document.getElementById("noData");
+    const numberGrid = document.getElementById("numberGrid");
+    const resetNumbersBtn = document.getElementById("resetNumbersBtn");
 
     let savings = JSON.parse(localStorage.getItem("savingsData")) || {};
     let goal = parseFloat(localStorage.getItem("goalAmount")) || 0;
     let previousSaving = parseFloat(localStorage.getItem("previousSaving")) || 0;
+    let usedNumbers = JSON.parse(localStorage.getItem("usedNumbers")) || [];
     let chart;
     let currentPage = 1;
     const rowsPerPage = 5;
@@ -160,6 +205,64 @@
     // Initialize values from localStorage
     goalInput.value = goal || '';
     prevSavingInput.value = previousSaving || '';
+
+    // Generate number grid
+    function generateNumberGrid() {
+      numberGrid.innerHTML = '';
+      
+      for (let i = 1; i <= 50; i++) {
+        const numberTile = document.createElement('div');
+        numberTile.className = `number-tile ${usedNumbers.includes(i) ? 'used' : ''} bg-gray-100 text-gray-800`;
+        numberTile.textContent = i;
+        
+        // Add click functionality to manually toggle numbers
+        numberTile.addEventListener('click', () => {
+          toggleNumber(i);
+        });
+        
+        numberGrid.appendChild(numberTile);
+      }
+    }
+
+    // Toggle number used/unused
+    function toggleNumber(num) {
+      if (usedNumbers.includes(num)) {
+        usedNumbers = usedNumbers.filter(n => n !== num);
+      } else {
+        usedNumbers.push(num);
+      }
+      
+      localStorage.setItem("usedNumbers", JSON.stringify(usedNumbers));
+      generateNumberGrid();
+    }
+
+    // Reset all numbers
+    resetNumbersBtn.addEventListener('click', () => {
+      if (confirm("Are you sure you want to reset all tracked numbers?")) {
+        usedNumbers = [];
+        localStorage.setItem("usedNumbers", JSON.stringify(usedNumbers));
+        generateNumberGrid();
+      }
+    });
+
+    // Check if an amount is used and update number tracking
+    function updateNumberTracking(amount) {
+      const numberValue = Math.round(parseFloat(amount));
+      
+      // Only track numbers 1-50
+      if (numberValue >= 1 && numberValue <= 50 && !usedNumbers.includes(numberValue)) {
+        usedNumbers.push(numberValue);
+        localStorage.setItem("usedNumbers", JSON.stringify(usedNumbers));
+        generateNumberGrid();
+      }
+    }
+
+    // Check existing savings data for used numbers
+    function checkExistingSavingsForNumbers() {
+      Object.values(savings).forEach(amount => {
+        updateNumberTracking(amount);
+      });
+    }
 
     goalInput.addEventListener("change", () => {
       goal = parseFloat(goalInput.value) || 0;
@@ -443,18 +546,61 @@
     }
 
     function editEntry(date) {
+      const oldAmount = parseFloat(savings[date]);
       const newAmount = prompt("Edit saving amount (€):", savings[date]);
+      
       if (newAmount !== null && !isNaN(newAmount) && newAmount.trim() !== "") {
+        // Update savings data
         savings[date] = parseFloat(newAmount).toFixed(2);
         saveData();
+        
+        // Handle number tracking for the edited amount
+        // If old amount was a tracked number, we may need to remove it
+        if (oldAmount >= 1 && oldAmount <= 50) {
+          // Check if this amount is used elsewhere before removing
+          let stillUsed = false;
+          Object.values(savings).forEach(amt => {
+            if (Math.round(parseFloat(amt)) === Math.round(oldAmount)) {
+              stillUsed = true;
+            }
+          });
+          
+          if (!stillUsed) {
+            usedNumbers = usedNumbers.filter(n => n !== Math.round(oldAmount));
+            localStorage.setItem("usedNumbers", JSON.stringify(usedNumbers));
+          }
+        }
+        
+        // Track the new amount if needed
+        updateNumberTracking(newAmount);
+        
         render();
+        generateNumberGrid();
       }
     }
 
     function deleteEntry(date) {
       if (confirm("Are you sure you want to delete this saving entry?")) {
+        const oldAmount = parseFloat(savings[date]);
+        
+        // Delete from savings
         delete savings[date];
         saveData();
+        
+        // Handle number tracking - remove the number if it's not used elsewhere
+        if (oldAmount >= 1 && oldAmount <= 50) {
+          let stillUsed = false;
+          Object.values(savings).forEach(amt => {
+            if (Math.round(parseFloat(amt)) === Math.round(oldAmount)) {
+              stillUsed = true;
+            }
+          });
+          
+          if (!stillUsed) {
+            usedNumbers = usedNumbers.filter(n => n !== Math.round(oldAmount));
+            localStorage.setItem("usedNumbers", JSON.stringify(usedNumbers));
+          }
+        }
         
         // Check if current page is now empty and adjust if needed
         const dates = Object.keys(savings);
@@ -464,6 +610,7 @@
         }
         
         render();
+        generateNumberGrid();
       }
     }
 
@@ -471,7 +618,8 @@
       const dataToSave = {
         savings: savings,
         goal: goal,
-        previousSaving: previousSaving
+        previousSaving: previousSaving,
+        usedNumbers: usedNumbers
       };
       const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
@@ -503,6 +651,11 @@
               prevSavingInput.value = previousSaving || '';
               localStorage.setItem("previousSaving", previousSaving);
             }
+            
+            if (Array.isArray(importedData.usedNumbers)) {
+              usedNumbers = importedData.usedNumbers;
+              localStorage.setItem("usedNumbers", JSON.stringify(usedNumbers));
+            }
           } else if (typeof importedData === "object") {
             savings = importedData;
           } else {
@@ -512,6 +665,7 @@
           saveData();
           currentPage = 1; // Reset to first page after import
           render();
+          generateNumberGrid();
           alert("Data imported successfully!");
         } catch (err) {
           alert("Invalid JSON file. Please upload a valid savings data file.");
@@ -535,8 +689,13 @@
         return;
       }
       
+      // Add to savings
       savings[date] = amount.toFixed(2);
       saveData();
+      
+      // Update number tracking
+      updateNumberTracking(amount);
+      
       form.reset();
       dateInput.valueAsDate = new Date();
       currentPage = 1; // Go to first page to see the new entry
@@ -552,8 +711,19 @@
     // Initialize date field with current date
     dateInput.valueAsDate = new Date();
     
+    // Initialize the number grid
+    generateNumberGrid();
+    
+    // Check existing savings data for used numbers
+    checkExistingSavingsForNumbers();
+    
     // Initial render
     render();
+
+    // Make functions available to the global scope for button onclick handlers
+    window.editEntry = editEntry;
+    window.deleteEntry = deleteEntry;
+    window.downloadJSON = downloadJSON;
   </script>
 </body>
 </html>
